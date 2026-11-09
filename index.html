@@ -6,198 +6,190 @@
 <title>My Home — Rise of Village</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  
-  :root {
-    --wood: #8B5A2B;
-    --stone: #7A8B99;
-    --gold: #F5B041;
-    --food: #E67E22;
-    --dark: #2C3E50;
-    --panel-bg: rgba(30, 40, 50, 0.92);
-    --panel-border: rgba(255, 215, 0, 0.3);
-  }
-
   body {
     font-family: 'Segoe UI', Tahoma, sans-serif;
-    background-color: #1a1a1a;
+    background: #1a1a1a;
     color: #fff;
-    overflow: hidden; /* Убираем скролл, карта на весь экран */
+    overflow: hidden;
     user-select: none;
-    height: 100vh;
-    width: 100vw;
+    height: 100vh; width: 100vw;
   }
 
-  /* ==== ГЛАВНЫЙ ЭКРАН КАРТЫ ==== */
+  /* ==== КАРТА ==== */
   .game-world {
     position: absolute;
     top: 0; left: 0;
     width: 100%; height: 100%;
-    background: radial-gradient(circle at center, #5E8C61 0%, #3D5A40 100%);
+    background: radial-gradient(ellipse at center, #6c9e6e 0%, #4a7c4e 40%, #2d4f30 100%);
     overflow: hidden;
     cursor: grab;
   }
   .game-world:active { cursor: grabbing; }
-  
-  /* Изометрическая сетка (земля) */
-  .grid {
+  .game-world.placing { cursor: crosshair; }
+
+  /* Изометрическая земля */
+  .ground {
     position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%) rotateX(60deg) rotateZ(45deg);
-    transform-style: preserve-3d;
-    display: grid;
-    grid-template-columns: repeat(20, 80px);
-    grid-template-rows: repeat(20, 80px);
-    gap: 2px;
-    opacity: 0.15;
+    width: 200%; height: 200%;
+    top: -50%; left: -50%;
+    background-image: 
+      linear-gradient(45deg, rgba(0,0,0,0.05) 25%, transparent 25%, transparent 75%, rgba(0,0,0,0.05) 75%),
+      linear-gradient(45deg, rgba(0,0,0,0.05) 25%, transparent 25%, transparent 75%, rgba(0,0,0,0.05) 75%);
+    background-size: 120px 120px;
+    background-position: 0 0, 60px 60px;
+    opacity: 0.5;
     pointer-events: none;
   }
-  .tile {
-    background: #8bc34a;
-    border: 1px solid #5d8a2c;
-    border-radius: 4px;
-    box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
-  }
 
-  /* ==== ОБЪЕКТЫ НА КАРТЕ ==== */
+  /* ==== ЗДАНИЯ ==== */
   .entity {
     position: absolute;
-    width: 100px; height: 100px;
-    transform: translate(-50%, -100%); /* Точка привязки — центр под домом */
-    pointer-events: auto;
+    width: 140px; height: 140px;
+    transform: translate(-50%, -85%);
     cursor: pointer;
-    transition: transform 0.2s;
-    filter: drop-shadow(0 15px 10px rgba(0,0,0,0.4));
+    transition: filter 0.2s;
     z-index: 10;
+    filter: drop-shadow(0 20px 15px rgba(0,0,0,0.5));
   }
   .entity:hover {
-    transform: translate(-50%, -105%) scale(1.05);
+    filter: drop-shadow(0 25px 20px rgba(0,0,0,0.7)) brightness(1.15);
     z-index: 20;
   }
   .entity svg {
     width: 100%; height: 100%;
     overflow: visible;
   }
-  
-  /* Информация над зданием (уровень) */
+
+  /* Уровень */
   .entity-level {
     position: absolute;
-    top: 0; right: 10px;
-    background: linear-gradient(180deg, #FFD700, #FFA500);
-    color: #333;
+    top: 5px; right: 5px;
+    background: linear-gradient(180deg, #FFD700, #FFA500, #CC8400);
+    color: #fff;
     font-weight: 900;
-    font-size: 12px;
-    padding: 2px 8px;
-    border-radius: 10px;
+    font-size: 13px;
+    padding: 3px 9px;
+    border-radius: 12px;
     border: 2px solid #fff;
-    box-shadow: 0 3px 6px rgba(0,0,0,0.5);
-    transform: translateY(-10px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.6), inset 0 1px 2px rgba(255,255,255,0.5);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.6);
     z-index: 5;
   }
 
-  /* ==== UI ПАНЕЛИ ==== */
-  
-  /* Верхняя панель ресурсов */
+  /* Тень от объекта на земле */
+  .entity-shadow {
+    position: absolute;
+    bottom: -5px; left: 50%;
+    transform: translateX(-50%);
+    width: 100px; height: 25px;
+    background: radial-gradient(ellipse, rgba(0,0,0,0.4) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  /* ==== ПРИЗРАК (при постановке дома) ==== */
+  .ghost {
+    position: absolute;
+    width: 140px; height: 140px;
+    transform: translate(-50%, -85%);
+    pointer-events: none;
+    opacity: 0.6;
+    z-index: 100;
+    filter: drop-shadow(0 20px 15px rgba(0,0,0,0.5));
+  }
+  .ghost svg { width: 100%; height: 100%; overflow: visible; }
+  .ghost .ghost-shadow {
+    position: absolute;
+    bottom: -5px; left: 50%;
+    transform: translateX(-50%);
+    width: 100px; height: 25px;
+    background: radial-gradient(ellipse, rgba(0,255,0,0.4) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .ghost.invalid .ghost-shadow {
+    background: radial-gradient(ellipse, rgba(255,0,0,0.5) 0%, transparent 70%);
+  }
+  .ghost.invalid svg { filter: hue-rotate(0deg) brightness(0.8) sepia(1) saturate(5) hue-rotate(-50deg); }
+
+  /* ==== UI ==== */
   .top-bar {
     position: absolute;
     top: 10px; left: 10px; right: 10px;
     display: flex;
-    gap: 10px;
+    gap: 8px;
     pointer-events: none;
     z-index: 100;
     flex-wrap: wrap;
   }
-  
   .res-group {
-    display: flex;
-    gap: 5px;
-    background: var(--panel-bg);
-    padding: 5px 10px;
+    display: flex; gap: 5px;
+    background: linear-gradient(180deg, rgba(30,40,50,0.95), rgba(15,20,25,0.95));
+    padding: 6px 12px;
     border-radius: 20px;
-    border: 2px solid var(--panel-border);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+    border: 2px solid rgba(255,215,0,0.4);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.15);
     pointer-events: auto;
     backdrop-filter: blur(5px);
   }
-  
   .res-item {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    font-weight: bold;
-    font-size: 14px;
+    display: flex; align-items: center; gap: 5px;
+    font-weight: bold; font-size: 14px;
+    color: #eee;
+    text-shadow: 0 1px 2px #000;
   }
-  .res-item img {
-    width: 20px; height: 20px;
-    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5));
-  }
-  .res-item span { color: #eee; text-shadow: 0 1px 2px #000; }
 
-  /* Правая панель (Кнопки) */
   .side-bar {
     position: absolute;
-    right: 10px;
-    top: 70px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+    right: 10px; top: 70px;
+    display: flex; flex-direction: column; gap: 10px;
     z-index: 100;
   }
-  
   .btn-circular {
-    width: 55px; height: 55px;
+    width: 60px; height: 60px;
     border-radius: 50%;
     background: linear-gradient(180deg, #4A6572, #232F34);
-    border: 2px solid #8B9DAF;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.5), inset 0 2px 5px rgba(255,255,255,0.2);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    border: 3px solid #8B9DAF;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.6), inset 0 2px 5px rgba(255,255,255,0.25);
+    display: flex; align-items: center; justify-content: center;
     cursor: pointer;
-    transition: all 0.1s;
+    transition: all 0.15s;
     color: white;
-    font-size: 24px;
+    font-size: 26px;
   }
-  .btn-circular:hover { transform: scale(1.1); border-color: var(--gold); }
+  .btn-circular:hover { transform: scale(1.1); border-color: #FFD700; }
   .btn-circular:active { transform: scale(0.95); }
 
-  /* ==== МОДАЛЬНОЕ ОКНО (МАГАЗИН/УЛУЧШЕНИЯ) ==== */
+  /* ==== МОДАЛКА ==== */
   .modal-overlay {
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.7);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    background: rgba(0,0,0,0.75);
+    display: flex; align-items: center; justify-content: center;
     z-index: 200;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.3s;
-    backdrop-filter: blur(3px);
+    backdrop-filter: blur(4px);
   }
-  .modal-overlay.active {
-    opacity: 1;
-    pointer-events: auto;
-  }
-  
+  .modal-overlay.active { opacity: 1; pointer-events: auto; }
   .modal-content {
-    width: 90%;
-    max-width: 450px;
+    width: 92%; max-width: 480px;
     background: linear-gradient(180deg, #2c3e50, #1a252f);
-    border: 3px solid var(--gold);
+    border: 3px solid #FFD700;
     border-radius: 20px;
     padding: 20px;
     box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 0 30px rgba(255,215,0,0.1);
-    transform: scale(0.8);
+    transform: scale(0.85);
     transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     max-height: 85vh;
     overflow-y: auto;
   }
   .modal-overlay.active .modal-content { transform: scale(1); }
-  
   .modal-title {
     text-align: center;
-    color: var(--gold);
-    font-size: 24px;
+    color: #FFD700;
+    font-size: 22px;
     margin-bottom: 15px;
     text-transform: uppercase;
     letter-spacing: 2px;
@@ -205,17 +197,9 @@
     border-bottom: 2px solid rgba(255,215,0,0.3);
     padding-bottom: 10px;
   }
-  
-  /* Список зданий в магазине */
-  .shop-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 10px;
-  }
-  
+  .shop-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
   .shop-card {
-    display: flex;
-    align-items: center;
+    display: flex; align-items: center;
     background: rgba(255,255,255,0.05);
     border: 2px solid rgba(255,255,255,0.1);
     border-radius: 12px;
@@ -225,30 +209,22 @@
   }
   .shop-card:hover:not(.disabled) {
     background: rgba(255,255,255,0.15);
-    border-color: var(--gold);
+    border-color: #FFD700;
     transform: translateX(5px);
   }
-  .shop-card.disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-    filter: grayscale(1);
-  }
-  
+  .shop-card.disabled { opacity: 0.4; cursor: not-allowed; filter: grayscale(1); }
   .shop-icon {
-    width: 60px; height: 60px;
-    flex-shrink: 0;
-    margin-right: 15px;
+    width: 70px; height: 70px;
+    flex-shrink: 0; margin-right: 12px;
     display: flex; align-items: center; justify-content: center;
   }
   .shop-icon svg { width: 100%; height: 100%; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5)); }
-  
   .shop-info { flex: 1; }
   .shop-name { font-size: 16px; font-weight: bold; color: #fff; margin-bottom: 3px; }
   .shop-desc { font-size: 12px; color: #aaa; margin-bottom: 5px; }
-  .shop-cost { font-size: 13px; color: #FFD700; font-weight: bold; display: flex; gap: 8px; }
+  .shop-cost { font-size: 13px; color: #FFD700; font-weight: bold; display: flex; gap: 8px; flex-wrap: wrap; }
   .shop-cost span { display: flex; align-items: center; gap: 3px; }
-  
-  /* Кнопка закрытия */
+  .shop-cost span.bad { color: #e74c3c; }
   .btn-close {
     width: 100%;
     padding: 12px;
@@ -266,324 +242,706 @@
   }
   .btn-close:active { transform: translateY(2px); box-shadow: none; }
 
-  /* Сообщения (Toast) */
+  /* Тост */
   .toast {
     position: absolute;
     top: 80px; left: 50%;
     transform: translateX(-50%) translateY(-20px);
-    background: rgba(0,0,0,0.85);
+    background: rgba(0,0,0,0.9);
     color: #fff;
-    padding: 10px 20px;
-    border-radius: 20px;
-    border: 1px solid var(--gold);
+    padding: 12px 24px;
+    border-radius: 25px;
+    border: 2px solid #FFD700;
     font-size: 14px;
     font-weight: bold;
     opacity: 0;
     transition: all 0.3s;
     pointer-events: none;
     z-index: 300;
-    white-space: nowrap;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    box-shadow: 0 5px 20px rgba(0,0,0,0.6);
+    max-width: 90%;
+    text-align: center;
   }
-  .toast.show {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* Подсказка постановки */
+  .place-hint {
+    position: absolute;
+    bottom: 30px; left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.85);
+    color: #FFD700;
+    padding: 12px 24px;
+    border-radius: 25px;
+    border: 2px solid #FFD700;
+    font-size: 14px;
+    font-weight: bold;
+    z-index: 150;
+    display: none;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.6);
+    text-align: center;
+    max-width: 90%;
+  }
+  .place-hint.active { display: block; }
+  .place-hint button {
+    margin-left: 10px;
+    background: #e74c3c;
+    color: white;
+    border: none;
+    padding: 5px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    font-family: inherit;
   }
 
-  /* Мобильная адаптация */
   @media (max-width: 600px) {
-    .entity { width: 80px; height: 80px; }
+    .entity, .ghost { width: 110px; height: 110px; }
     .res-group { padding: 4px 8px; }
     .res-item { font-size: 12px; }
-    .res-item img { width: 16px; height: 16px; }
-    .btn-circular { width: 45px; height: 45px; font-size: 20px; }
-    .top-bar { gap: 5px; }
+    .btn-circular { width: 50px; height: 50px; font-size: 22px; }
+    .shop-icon { width: 55px; height: 55px; }
   }
 </style>
 </head>
 <body>
 
-<!-- Мир -->
 <div class="game-world" id="gameWorld">
-  <div class="grid" id="grid"></div>
-  <!-- Сюда будут добавляться здания -->
+  <div class="ground" id="ground"></div>
 </div>
 
-<!-- UI Верхняя панель -->
 <div class="top-bar">
-  <div class="res-group">
-    <div class="res-item"><span style="font-size:18px">🍖</span> <span id="ui-food">0</span></div>
-  </div>
-  <div class="res-group">
-    <div class="res-item"><span style="font-size:18px">🪵</span> <span id="ui-wood">0</span></div>
-  </div>
-  <div class="res-group">
-    <div class="res-item"><span style="font-size:18px">🪨</span> <span id="ui-stone">0</span></div>
-  </div>
-  <div class="res-group">
-    <div class="res-item"><span style="font-size:18px">🪙</span> <span id="ui-gold">0</span></div>
-  </div>
+  <div class="res-group"><div class="res-item">🍖 <span id="ui-food">0</span></div></div>
+  <div class="res-group"><div class="res-item">🪵 <span id="ui-wood">0</span></div></div>
+  <div class="res-group"><div class="res-item">🪨 <span id="ui-stone">0</span></div></div>
+  <div class="res-group"><div class="res-item">🪙 <span id="ui-gold">0</span></div></div>
 </div>
 
-<!-- UI Правая панель -->
 <div class="side-bar">
   <div class="btn-circular" onclick="openShop()" title="Строительство">🔨</div>
   <div class="btn-circular" onclick="saveGame()" title="Сохранить">💾</div>
+  <div class="btn-circular" onclick="centerCamera()" title="Центр">🎯</div>
   <div class="btn-circular" onclick="resetGame()" title="Сброс">🔄</div>
 </div>
 
-<!-- Модальное окно -->
 <div class="modal-overlay" id="modal" onclick="closeModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
     <div class="modal-title" id="modalTitle">Строительство</div>
-    <div class="shop-grid" id="shopList">
-      <!-- Список генерируется в JS -->
-    </div>
+    <div class="shop-grid" id="shopList"></div>
     <button class="btn-close" onclick="closeModal()">Закрыть</button>
   </div>
 </div>
 
-<!-- Тосты -->
 <div class="toast" id="toast"></div>
+<div class="place-hint" id="placeHint">
+  📍 Нажми на карту, чтобы поставить здание
+  <button onclick="cancelPlacement()">Отмена</button>
+</div>
 
 <script>
-// ==================== SVG СПРАЙТЫ (3D СТИЛЬ) ====================
-// Генерируем красивые изометрические домики
+// ==================== 🎨 НОВЫЕ 3D SVG МОДЕЛИ ====================
+// Все модели нарисованы в изометрии с объёмом, тенями и деталями
 const SPRITES = {
+  
+  // 🏛️ РАТУША — большое каменное здание с башнями
   cityhall: `
-    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-      <!-- Тень -->
-      <ellipse cx="50" cy="90" rx="35" ry="10" fill="rgba(0,0,0,0.3)" filter="blur(2px)"/>
-      <!-- Основание -->
-      <polygon points="20,80 50,95 80,80 50,65" fill="#95a5a6"/>
-      <polygon points="20,80 20,60 50,75 50,95" fill="#7f8c8d"/>
-      <polygon points="80,80 80,60 50,75 50,95" fill="#bdc3c7"/>
-      <!-- Стены -->
-      <polygon points="25,75 50,85 50,45 25,35" fill="#e8c39e"/>
-      <polygon points="75,75 50,85 50,45 75,35" fill="#d4a76a"/>
-      <polygon points="25,35 50,45 75,35 50,25" fill="#f5deb3"/>
-      <!-- Крыша -->
-      <polygon points="25,35 50,45 50,10 25,20" fill="#c0392b"/>
-      <polygon points="75,35 50,45 50,10 75,20" fill="#e74c3c"/>
-      <polygon points="25,20 50,10 75,20 50,30" fill="#922b21"/>
-      <!-- Флаг -->
-      <line x1="50" y1="10" x2="50" y2="-5" stroke="#fff" stroke-width="2"/>
-      <polygon points="50,-5 70,0 50,5" fill="#f1c40f"/>
+    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="ch-wall-left" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#e8d5b7"/><stop offset="100%" stop-color="#b8a37a"/>
+        </linearGradient>
+        <linearGradient id="ch-wall-right" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#c9b48f"/><stop offset="100%" stop-color="#9c865c"/>
+        </linearGradient>
+        <linearGradient id="ch-roof-left" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#d94a3d"/><stop offset="100%" stop-color="#8b1e1e"/>
+        </linearGradient>
+        <linearGradient id="ch-roof-right" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#b8352b"/><stop offset="100%" stop-color="#6d1212"/>
+        </linearGradient>
+        <linearGradient id="ch-gold" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#FFE066"/><stop offset="100%" stop-color="#C9920A"/>
+        </linearGradient>
+      </defs>
+      
+      <!-- Основание (земля/фундамент) -->
+      <ellipse cx="100" cy="175" rx="80" ry="20" fill="rgba(0,0,0,0.3)"/>
+      <polygon points="30,170 100,185 170,170 100,155" fill="#7a6b52"/>
+      <polygon points="30,170 30,160 100,175 100,185" fill="#5c4f3a"/>
+      <polygon points="170,170 170,160 100,175 100,185" fill="#4a4030"/>
+      
+      <!-- Левая башня -->
+      <polygon points="35,160 55,168 55,100 35,92" fill="url(#ch-wall-left)"/>
+      <polygon points="55,168 75,160 75,92 55,100" fill="url(#ch-wall-right)"/>
+      <polygon points="35,92 55,100 75,92 55,84" fill="#a89677"/>
+      <polygon points="35,92 55,100 55,60 35,52" fill="url(#ch-roof-left)"/>
+      <polygon points="75,92 55,100 55,60 75,52" fill="url(#ch-roof-right)"/>
+      <polygon points="35,52 55,60 75,52 55,44" fill="#6d1212"/>
+      <!-- Флаг левый -->
+      <line x1="55" y1="60" x2="55" y2="35" stroke="#fff" stroke-width="1.5"/>
+      <polygon points="55,35 70,40 55,45" fill="#3498db"/>
+      
+      <!-- Правая башня -->
+      <polygon points="125,160 145,168 145,100 125,92" fill="url(#ch-wall-left)"/>
+      <polygon points="145,168 165,160 165,92 145,100" fill="url(#ch-wall-right)"/>
+      <polygon points="125,92 145,100 165,92 145,84" fill="#a89677"/>
+      <polygon points="125,92 145,100 145,60 125,52" fill="url(#ch-roof-left)"/>
+      <polygon points="165,92 145,100 145,60 165,52" fill="url(#ch-roof-right)"/>
+      <polygon points="125,52 145,60 165,52 145,44" fill="#6d1212"/>
+      <line x1="145" y1="60" x2="145" y2="35" stroke="#fff" stroke-width="1.5"/>
+      <polygon points="145,35 160,40 145,45" fill="#3498db"/>
+      
+      <!-- Центральное здание -->
+      <polygon points="55,155 100,170 100,90 55,75" fill="url(#ch-wall-left)"/>
+      <polygon points="145,155 100,170 100,90 145,75" fill="url(#ch-wall-right)"/>
+      <polygon points="55,75 100,90 145,75 100,60" fill="#d4c1a0"/>
+      
+      <!-- Крыша центральная -->
+      <polygon points="55,75 100,90 100,40 55,25" fill="url(#ch-roof-left)"/>
+      <polygon points="145,75 100,90 100,40 145,25" fill="url(#ch-roof-right)"/>
+      <polygon points="55,25 100,40 145,25 100,10" fill="#8b1e1e"/>
+      
+      <!-- Часы -->
+      <circle cx="100" cy="80" r="8" fill="url(#ch-gold)" stroke="#6d4c1a" stroke-width="1.5"/>
+      <circle cx="100" cy="80" r="5" fill="#fff9e0"/>
+      <line x1="100" y1="80" x2="100" y2="76" stroke="#333" stroke-width="1"/>
+      <line x1="100" y1="80" x2="103" y2="80" stroke="#333" stroke-width="1"/>
+      
       <!-- Окна -->
-      <polygon points="30,60 40,65 40,55 30,50" fill="#3498db"/>
-      <polygon points="60,65 70,60 70,50 60,55" fill="#3498db"/>
-      <polygon points="45,75 55,75 55,65 45,65" fill="#8b4513"/>
+      <polygon points="70,120 85,128 85,105 70,97" fill="#3498db" stroke="#2c3e50" stroke-width="1"/>
+      <polygon points="115,128 130,120 130,97 115,105" fill="#3498db" stroke="#2c3e50" stroke-width="1"/>
+      
+      <!-- Дверь -->
+      <polygon points="88,145 112,145 112,115 88,115" fill="#5d4037"/>
+      <polygon points="88,115 100,120 112,115 100,110" fill="#8b4513"/>
+      <line x1="100" y1="115" x2="100" y2="145" stroke="#2a1a0a" stroke-width="1"/>
+      <circle cx="96" cy="130" r="1.5" fill="#FFD700"/>
+      <circle cx="104" cy="130" r="1.5" fill="#FFD700"/>
+      
+      <!-- Ступени -->
+      <polygon points="82,152 118,152 122,157 78,157" fill="#a89677"/>
+      <polygon points="78,157 122,157 126,162 74,162" fill="#8b7a5c"/>
     </svg>`,
-  
+
+  // 🏠 ДОМ — уютный крестьянский домик
   house: `
-    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-      <ellipse cx="50" cy="88" rx="25" ry="6" fill="rgba(0,0,0,0.3)"/>
-      <polygon points="25,80 50,92 75,80 50,68" fill="#95a5a6"/>
-      <polygon points="28,78 50,88 50,50 28,40" fill="#f5deb3"/>
-      <polygon points="72,78 50,88 50,50 72,40" fill="#d4a76a"/>
-      <polygon points="28,40 50,50 72,40 50,30" fill="#fdf5e6"/>
-      <polygon points="28,40 50,50 50,20 28,10" fill="#c0392b"/>
-      <polygon points="72,40 50,50 50,20 72,10" fill="#e74c3c"/>
-      <polygon points="28,10 50,20 72,10 50,0" fill="#922b21"/>
-      <rect x="35" y="58" width="8" height="8" fill="#87ceeb" stroke="#4a6b8a" transform="skewY(15)"/>
-      <rect x="60" y="60" width="6" height="6" fill="#87ceeb" stroke="#4a6b8a" transform="skewY(-15)"/>
-      <rect x="46" y="70" width="8" height="12" fill="#5c2e0e"/>
+    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="h-wall-left" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#f4e4c1"/><stop offset="100%" stop-color="#c9b48f"/>
+        </linearGradient>
+        <linearGradient id="h-wall-right" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#d9c9a8"/><stop offset="100%" stop-color="#a89677"/>
+        </linearGradient>
+        <linearGradient id="h-roof-left" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#c0392b"/><stop offset="100%" stop-color="#7b1a14"/>
+        </linearGradient>
+        <linearGradient id="h-roof-right" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#a02d22"/><stop offset="100%" stop-color="#5c120e"/>
+        </linearGradient>
+        <linearGradient id="h-window" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#fff9b0"/><stop offset="100%" stop-color="#f39c12"/>
+        </linearGradient>
+      </defs>
+      
+      <!-- Тень -->
+      <ellipse cx="100" cy="175" rx="65" ry="15" fill="rgba(0,0,0,0.35)"/>
+      
+      <!-- Основание -->
+      <polygon points="45,170 100,185 155,170 100,155" fill="#7a6b52"/>
+      <polygon points="45,170 45,162 100,177 100,185" fill="#5c4f3a"/>
+      <polygon points="155,170 155,162 100,177 100,185" fill="#4a4030"/>
+      
+      <!-- Стены -->
+      <polygon points="55,165 100,178 100,105 55,92" fill="url(#h-wall-left)"/>
+      <polygon points="145,165 100,178 100,105 145,92" fill="url(#h-wall-right)"/>
+      
+      <!-- Крыша -->
+      <polygon points="50,95 100,108 100,50 50,37" fill="url(#h-roof-left)"/>
+      <polygon points="150,95 100,108 100,50 150,37" fill="url(#h-roof-right)"/>
+      <polygon points="50,37 100,50 150,37 100,24" fill="#5c120e"/>
+      <!-- Конёк крыши -->
+      <line x1="50" y1="37" x2="100" y2="50" stroke="#3a0a07" stroke-width="2"/>
+      <line x1="100" y1="50" x2="150" y2="37" stroke="#3a0a07" stroke-width="2"/>
+      
+      <!-- Труба -->
+      <polygon points="120,55 130,58 130,30 120,27" fill="#8b4513"/>
+      <polygon points="120,27 130,30 135,28 125,25" fill="#a0522d"/>
+      <ellipse cx="127" cy="28" rx="5" ry="1.5" fill="#5d4037"/>
+      <!-- Дым -->
+      <circle cx="127" cy="22" r="2" fill="rgba(200,200,200,0.5)"/>
+      <circle cx="130" cy="16" r="3" fill="rgba(200,200,200,0.3)"/>
+      
+      <!-- Окно с тёплым светом -->
+      <polygon points="65,115 82,122 82,100 65,93" fill="url(#h-window)" stroke="#5d4037" stroke-width="1.5"/>
+      <line x1="73" y1="97" x2="73" y2="119" stroke="#5d4037" stroke-width="1"/>
+      <line x1="65" y1="107" x2="82" y2="114" stroke="#5d4037" stroke-width="1"/>
+      
+      <!-- Второе окно -->
+      <polygon points="118,122 135,115 135,93 118,100" fill="url(#h-window)" stroke="#5d4037" stroke-width="1.5"/>
+      <line x1="126" y1="97" x2="126" y2="119" stroke="#5d4037" stroke-width="1"/>
+      <line x1="118" y1="107" x2="135" y2="114" stroke="#5d4037" stroke-width="1"/>
+      
+      <!-- Дверь -->
+      <polygon points="88,155 112,155 112,120 88,120" fill="#5d4037"/>
+      <polygon points="88,120 100,125 112,120 100,115" fill="#8b4513"/>
+      <line x1="100" y1="120" x2="100" y2="155" stroke="#2a1a0a" stroke-width="1.5"/>
+      <circle cx="95" cy="140" r="2" fill="#FFD700"/>
+      <circle cx="105" cy="140" r="2" fill="#FFD700"/>
+      
+      <!-- Декор: цветы у входа -->
+      <circle cx="78" cy="158" r="2" fill="#e74c3c"/>
+      <circle cx="82" cy="160" r="2" fill="#f1c40f"/>
+      <circle cx="122" cy="158" r="2" fill="#e74c3c"/>
+      <circle cx="118" cy="160" r="2" fill="#f1c40f"/>
     </svg>`,
-  
+
+  // 🏭 ЛЕСОПИЛКА — с большим бревном и пилой
   lumber: `
-    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-      <ellipse cx="50" cy="88" rx="30" ry="8" fill="rgba(0,0,0,0.3)"/>
-      <polygon points="20,80 50,92 80,80 50,68" fill="#95a5a6"/>
-      <polygon points="25,78 50,88 50,55 25,45" fill="#a0522d"/>
-      <polygon points="75,78 50,88 50,55 75,45" fill="#8b4513"/>
-      <polygon points="25,45 50,55 75,45 50,35" fill="#d4a76a"/>
-      <polygon points="20,45 50,55 50,30 20,20" fill="#5d4037"/>
-      <polygon points="80,45 50,55 50,30 80,20" fill="#6d4c41"/>
-      <polygon points="20,20 50,30 80,20 50,10" fill="#3e2723"/>
-      <!-- Бревна -->
-      <ellipse cx="35" cy="65" rx="6" ry="3" fill="#f5deb3" stroke="#8b6914"/>
-      <ellipse cx="50" cy="70" rx="6" ry="3" fill="#f5deb3" stroke="#8b6914"/>
-      <ellipse cx="65" cy="65" rx="6" ry="3" fill="#f5deb3" stroke="#8b6914"/>
-    </svg>`,
-
-  farm: `
-    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-      <ellipse cx="50" cy="88" rx="35" ry="8" fill="rgba(0,0,0,0.3)"/>
-      <polygon points="15,80 50,95 85,80 50,65" fill="#8bc34a"/>
-      <polygon points="20,75 50,88 50,60 20,50" fill="#f5deb3"/>
-      <polygon points="80,75 50,88 50,60 80,50" fill="#e8c39e"/>
-      <polygon points="20,50 50,60 80,50 50,40" fill="#fdf5e6"/>
-      <polygon points="20,50 50,60 50,30 20,20" fill="#e74c3c"/>
-      <polygon points="80,50 50,60 50,30 80,20" fill="#c0392b"/>
-      <polygon points="20,20 50,30 80,20 50,10" fill="#922b21"/>
-      <rect x="38" y="68" width="10" height="15" fill="#8b4513" transform="skewY(15)"/>
-      <!-- Сено -->
-      <ellipse cx="70" cy="82" rx="8" ry="4" fill="#f1c40f"/>
-      <ellipse cx="70" cy="78" rx="6" ry="3" fill="#f39c12"/>
-    </svg>`,
-
-  quarry: `
-    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-      <ellipse cx="50" cy="88" rx="35" ry="10" fill="rgba(0,0,0,0.3)"/>
-      <polygon points="15,80 50,95 85,80 50,65" fill="#7f8c8d"/>
-      <!-- Камни -->
-      <polygon points="25,75 35,60 45,75 50,85 30,85" fill="#bdc3c7" stroke="#4a5354"/>
-      <polygon points="55,80 65,55 75,75 70,85 55,85" fill="#95a5a6" stroke="#4a5354"/>
-      <polygon points="40,85 50,70 60,85" fill="#d5dbdb" stroke="#4a5354"/>
-      <!-- Тележка -->
-      <rect x="65" y="70" width="15" height="10" fill="#8b4513"/>
-      <circle cx="68" cy="82" r="3" fill="#333"/>
-      <circle cx="77" cy="82" r="3" fill="#333"/>
-    </svg>`,
-
-  barracks: `
-    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-      <ellipse cx="50" cy="88" rx="35" ry="8" fill="rgba(0,0,0,0.3)"/>
-      <polygon points="15,80 50,95 85,80 50,65" fill="#95a5a6"/>
-      <polygon points="20,75 50,88 50,45 20,35" fill="#7f8c8d"/>
-      <polygon points="80,75 50,88 50,45 80,35" fill="#6c7a89"/>
-      <polygon points="20,35 50,45 80,35 50,25" fill="#95a5a6"/>
-      <!-- Зубцы на крыше -->
-      <rect x="25" y="25" width="8" height="10" fill="#7f8c8d"/>
-      <rect x="40" y="20" width="8" height="10" fill="#7f8c8d"/>
-      <rect x="55" y="20" width="8" height="10" fill="#7f8c8d"/>
-      <rect x="70" y="25" width="8" height="10" fill="#7f8c8d"/>
+    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="l-wall-left" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#a0522d"/><stop offset="100%" stop-color="#6b3410"/>
+        </linearGradient>
+        <linearGradient id="l-wall-right" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#8b4513"/><stop offset="100%" stop-color="#4a2306"/>
+        </linearGradient>
+        <linearGradient id="l-roof-left" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#5d4037"/><stop offset="100%" stop-color="#2e1a10"/>
+        </linearGradient>
+        <linearGradient id="l-roof-right" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#4a332a"/><stop offset="100%" stop-color="#1e0f08"/>
+        </linearGradient>
+        <radialGradient id="l-log">
+          <stop offset="0%" stop-color="#f5deb3"/><stop offset="80%" stop-color="#d4a76a"/><stop offset="100%" stop-color="#8b6914"/>
+        </radialGradient>
+      </defs>
+      
+      <ellipse cx="100" cy="175" rx="70" ry="16" fill="rgba(0,0,0,0.35)"/>
+      <polygon points="40,170 100,185 160,170 100,155" fill="#7a6b52"/>
+      <polygon points="40,170 40,160 100,175 100,185" fill="#5c4f3a"/>
+      <polygon points="160,170 160,160 100,175 100,185" fill="#4a4030"/>
+      
+      <!-- Стены -->
+      <polygon points="55,165 100,178 100,100 55,87" fill="url(#l-wall-left)"/>
+      <polygon points="145,165 100,178 100,100 145,87" fill="url(#l-wall-right)"/>
+      <!-- Доски на стенах -->
+      <line x1="60" y1="120" x2="95" y2="132" stroke="#3a1a06" stroke-width="1.5" opacity="0.6"/>
+      <line x1="60" y1="140" x2="95" y2="152" stroke="#3a1a06" stroke-width="1.5" opacity="0.6"/>
+      <line x1="105" y1="132" x2="140" y2="120" stroke="#3a1a06" stroke-width="1.5" opacity="0.6"/>
+      <line x1="105" y1="152" x2="140" y2="140" stroke="#3a1a06" stroke-width="1.5" opacity="0.6"/>
+      
+      <!-- Крыша -->
+      <polygon points="50,90 100,103 100,45 50,32" fill="url(#l-roof-left)"/>
+      <polygon points="150,90 100,103 100,45 150,32" fill="url(#l-roof-right)"/>
+      <polygon points="50,32 100,45 150,32 100,19" fill="#1e0f08"/>
+      
+      <!-- Большие брёвна сбоку -->
+      <ellipse cx="165" cy="155" rx="15" ry="8" fill="url(#l-log)" stroke="#5d3a1a" stroke-width="1"/>
+      <ellipse cx="165" cy="155" rx="8" ry="4" fill="#8b6914"/>
+      <ellipse cx="165" cy="140" rx="15" ry="8" fill="url(#l-log)" stroke="#5d3a1a" stroke-width="1"/>
+      <ellipse cx="165" cy="140" rx="8" ry="4" fill="#8b6914"/>
+      <ellipse cx="165" cy="125" rx="15" ry="8" fill="url(#l-log)" stroke="#5d3a1a" stroke-width="1"/>
+      <ellipse cx="165" cy="125" rx="8" ry="4" fill="#8b6914"/>
+      
       <!-- Ворота -->
-      <polygon points="43,85 57,85 57,65 43,65" fill="#2c3e50"/>
-      <line x1="50" y1="65" x2="50" y2="85" stroke="#111" stroke-width="1"/>
-      <!-- Флаги -->
-      <line x1="20" y1="35" x2="20" y2="10" stroke="#ddd" stroke-width="2"/>
-      <polygon points="20,10 35,15 20,20" fill="#e74c3c"/>
-      <line x1="80" y1="35" x2="80" y2="10" stroke="#ddd" stroke-width="2"/>
-      <polygon points="80,10 65,15 80,20" fill="#e74c3c"/>
+      <polygon points="80,160 120,160 120,125 80,125" fill="#2a1a0a"/>
+      <line x1="100" y1="125" x2="100" y2="160" stroke="#6b3410" stroke-width="2"/>
+      
+      <!-- Пила на стене -->
+      <line x1="55" y1="100" x2="75" y2="110" stroke="#7f8c8d" stroke-width="3"/>
+      <path d="M55,100 L50,95 L52,103 Z" fill="#95a5a6"/>
     </svg>`,
 
-  goldmine: `
-    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-      <ellipse cx="50" cy="88" rx="30" ry="8" fill="rgba(0,0,0,0.3)"/>
-      <polygon points="20,80 50,92 80,80 50,68" fill="#7f8c8d"/>
-      <!-- Пещера -->
-      <path d="M25,80 Q30,40 50,45 Q70,40 75,80 Z" fill="#5d4037"/>
-      <path d="M35,80 Q40,55 50,58 Q60,55 65,80 Z" fill="#1a1a1a"/>
-      <!-- Золото -->
-      <circle cx="45" cy="75" r="3" fill="#f1c40f" stroke="#f39c12"/>
-      <circle cx="55" cy="78" r="2" fill="#f1c40f" stroke="#f39c12"/>
-      <circle cx="50" cy="72" r="2.5" fill="#f1c40f" stroke="#f39c12"/>
+  // 🌾 ФЕРМА — с полями и сеном
+  farm: `
+    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="f-wall-left" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#f4e4c1"/><stop offset="100%" stop-color="#c9b48f"/>
+        </linearGradient>
+        <linearGradient id="f-wall-right" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#d9c9a8"/><stop offset="100%" stop-color="#a89677"/>
+        </linearGradient>
+        <linearGradient id="f-roof" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#d35400"/><stop offset="100%" stop-color="#8b3400"/>
+        </linearGradient>
+        <radialGradient id="f-hay">
+          <stop offset="0%" stop-color="#ffe066"/><stop offset="100%" stop-color="#c9920a"/>
+        </radialGradient>
+      </defs>
+      
+      <ellipse cx="100" cy="175" rx="75" ry="17" fill="rgba(0,0,0,0.35)"/>
+      
+      <!-- Поле с рядами -->
+      <polygon points="20,175 100,195 180,175 100,155" fill="#8bc34a"/>
+      <line x1="35" y1="172" x2="100" y2="188" stroke="#6b8e23" stroke-width="1.5"/>
+      <line x1="50" y1="178" x2="100" y2="191" stroke="#6b8e23" stroke-width="1.5"/>
+      <line x1="150" y1="172" x2="100" y2="188" stroke="#6b8e23" stroke-width="1.5"/>
+      <line x1="165" y1="178" x2="100" y2="191" stroke="#6b8e23" stroke-width="1.5"/>
+      
+      <!-- Амбар -->
+      <polygon points="50,165 100,180 100,100 50,85" fill="url(#f-wall-left)"/>
+      <polygon points="150,165 100,180 100,100 150,85" fill="url(#f-wall-right)"/>
+      <!-- Крыша с покатым верхом -->
+      <polygon points="45,88 100,103 100,50 45,35" fill="url(#f-roof)"/>
+      <polygon points="155,88 100,103 100,50 155,35" fill="url(#f-roof)" opacity="0.85"/>
+      <polygon points="45,35 100,50 155,35 100,20" fill="#6b2600"/>
+      <!-- Доска-крест на фронтоне (амбар) -->
+      <polygon points="70,90 100,100 100,80 70,70" fill="#f4e4c1" opacity="0.7"/>
+      <line x1="70" y1="90" x2="100" y2="80" stroke="#8b4513" stroke-width="2"/>
+      <line x1="85" y1="95" x2="85" y2="72" stroke="#8b4513" stroke-width="2"/>
+      
+      <!-- Ворота -->
+      <polygon points="78,155 122,155 122,115 78,115" fill="#8b4513"/>
+      <line x1="100" y1="115" x2="100" y2="155" stroke="#5d4037" stroke-width="2"/>
+      <line x1="78" y1="135" x2="122" y2="135" stroke="#5d4037" stroke-width="1.5"/>
+      
+      <!-- Стог сена -->
+      <ellipse cx="165" cy="165" rx="18" ry="10" fill="url(#f-hay)"/>
+      <ellipse cx="165" cy="157" rx="15" ry="9" fill="url(#f-hay)"/>
+      <ellipse cx="165" cy="150" rx="12" ry="7" fill="url(#f-hay)"/>
+      <line x1="155" y1="165" x2="175" y2="160" stroke="#8b6914" stroke-width="1"/>
+      <line x1="155" y1="158" x2="175" y2="153" stroke="#8b6914" stroke-width="1"/>
+      
+      <!-- Пшеница -->
+      <line x1="30" y1="170" x2="30" y2="155" stroke="#f1c40f" stroke-width="2"/>
+      <circle cx="30" cy="153" r="3" fill="#f39c12"/>
+      <line x1="40" y1="172" x2="40" y2="157" stroke="#f1c40f" stroke-width="2"/>
+      <circle cx="40" cy="155" r="3" fill="#f39c12"/>
+    </svg>`,
+
+  // ⛏️ КАМЕНОЛОМНЯ — карьер с валунами
+  quarry: `
+    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="q-stone" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#bdc3c7"/><stop offset="100%" stop-color="#5d6d7e"/>
+        </linearGradient>
+        <linearGradient id="q-stone-dark" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#95a5a6"/><stop offset="100%" stop-color="#34495e"/>
+        </linearGradient>
+        <linearGradient id="q-stone-light" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#d5dbdb"/><stop offset="100%" stop-color="#7f8c8d"/>
+        </linearGradient>
+      </defs>
+      
+      <ellipse cx="100" cy="175" rx="75" ry="17" fill="rgba(0,0,0,0.35)"/>
+      
+      <!-- Основание карьера -->
+      <polygon points="30,170 100,190 170,170 100,150" fill="#5d6d7e"/>
+      <polygon points="30,170 30,160 100,180 100,190" fill="#34495e"/>
+      <polygon points="170,170 170,160 100,180 100,190" fill="#2c3e50"/>
+      
+      <!-- Пещера (вход в шахту) -->
+      <path d="M 75,165 Q 80,110 100,110 Q 120,110 125,165 Z" fill="#1a1a1a"/>
+      <path d="M 85,165 Q 88,130 100,130 Q 112,130 115,165 Z" fill="#000"/>
+      <!-- Подпорки шахты -->
+      <rect x="73" y="130" width="6" height="35" fill="#5d4037"/>
+      <rect x="121" y="130" width="6" height="35" fill="#5d4037"/>
+      <rect x="73" y="128" width="54" height="6" fill="#5d4037"/>
+      
+      <!-- Большие валуны -->
+      <polygon points="20,165 40,140 60,150 55,170 30,172" fill="url(#q-stone)" stroke="#34495e" stroke-width="1.5"/>
+      <polygon points="40,140 55,135 65,148 60,150" fill="url(#q-stone-light)"/>
+      <polygon points="150,165 165,135 185,155 175,172 155,172" fill="url(#q-stone)" stroke="#34495e" stroke-width="1.5"/>
+      <polygon points="150,165 165,135 175,145 168,162" fill="url(#q-stone-light)"/>
+      
+      <!-- Маленькие камни -->
+      <polygon points="60,175 70,162 80,168 78,178" fill="url(#q-stone-dark)" stroke="#2c3e50"/>
+      <polygon points="130,175 138,165 148,172 145,180" fill="url(#q-stone-dark)" stroke="#2c3e50"/>
+      
       <!-- Кирка -->
-      <line x1="30" y1="50" x2="45" y2="35" stroke="#8b4513" stroke-width="3"/>
-      <path d="M42,38 L50,30 L55,35 L48,42 Z" fill="#95a5a6"/>
+      <line x1="155" y1="120" x2="175" y2="100" stroke="#8b4513" stroke-width="3" stroke-linecap="round"/>
+      <path d="M170,95 L180,100 L175,108 L165,103 Z" fill="#95a5a6" stroke="#34495e"/>
+      
+      <!-- Тележка с камнями -->
+      <rect x="105" y="160" width="25" height="10" fill="#5d4037"/>
+      <circle cx="110" cy="173" r="4" fill="#2c3e50" stroke="#111" stroke-width="1"/>
+      <circle cx="125" cy="173" r="4" fill="#2c3e50" stroke="#111" stroke-width="1"/>
+      <circle cx="112" cy="155" r="4" fill="#95a5a6"/>
+      <circle cx="120" cy="153" r="3" fill="#bdc3c7"/>
     </svg>`,
 
+  // ⚔️ КАЗАРМА — военное укрепление
+  barracks: `
+    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="b-wall-left" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#95a5a6"/><stop offset="100%" stop-color="#5d6d7e"/>
+        </linearGradient>
+        <linearGradient id="b-wall-right" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#7f8c8d"/><stop offset="100%" stop-color="#34495e"/>
+        </linearGradient>
+        <linearGradient id="b-roof" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#5d6d7e"/><stop offset="100%" stop-color="#2c3e50"/>
+        </linearGradient>
+      </defs>
+      
+      <ellipse cx="100" cy="175" rx="80" ry="18" fill="rgba(0,0,0,0.4)"/>
+      
+      <!-- Фундамент -->
+      <polygon points="30,170 100,188 170,170 100,152" fill="#4a5354"/>
+      <polygon points="30,170 30,158 100,176 100,188" fill="#2c3e50"/>
+      <polygon points="170,170 170,158 100,176 100,188" fill="#1e2b33"/>
+      
+      <!-- Стены -->
+      <polygon points="50,165 100,178 100,90 50,77" fill="url(#b-wall-left)"/>
+      <polygon points="150,165 100,178 100,90 150,77" fill="url(#b-wall-right)"/>
+      
+      <!-- Каменная кладка -->
+      <line x1="55" y1="110" x2="95" y2="122" stroke="#2c3e50" stroke-width="1" opacity="0.5"/>
+      <line x1="55" y1="135" x2="95" y2="147" stroke="#2c3e50" stroke-width="1" opacity="0.5"/>
+      <line x1="105" y1="122" x2="145" y2="110" stroke="#2c3e50" stroke-width="1" opacity="0.5"/>
+      <line x1="105" y1="147" x2="145" y2="135" stroke="#2c3e50" stroke-width="1" opacity="0.5"/>
+      
+      <!-- Зубцы на крыше -->
+      <polygon points="50,80 60,83 60,70 50,67" fill="#5d6d7e"/>
+      <polygon points="65,85 75,88 75,75 65,72" fill="#5d6d7e"/>
+      <polygon points="80,90 90,93 90,80 80,77" fill="#5d6d7e"/>
+      <polygon points="110,93 120,90 120,77 110,80" fill="#5d6d7e"/>
+      <polygon points="125,88 135,85 135,72 125,75" fill="#5d6d7e"/>
+      <polygon points="140,83 150,80 150,67 140,70" fill="#5d6d7e"/>
+      
+      <!-- Крыша центральная -->
+      <polygon points="75,88 100,95 100,55 75,48" fill="url(#b-roof)"/>
+      <polygon points="125,88 100,95 100,55 125,48" fill="url(#b-roof)" opacity="0.9"/>
+      <polygon points="75,48 100,55 125,48 100,41" fill="#1e2b33"/>
+      
+      <!-- Флаг -->
+      <line x1="100" y1="55" x2="100" y2="25" stroke="#ddd" stroke-width="1.5"/>
+      <polygon points="100,25 120,30 100,35" fill="#e74c3c"/>
+      <circle cx="120" cy="30" r="2" fill="#FFD700"/>
+      
+      <!-- Ворота с решёткой -->
+      <polygon points="83,160 117,160 117,120 83,120" fill="#1a1a1a"/>
+      <line x1="88" y1="120" x2="88" y2="160" stroke="#5d6d7e" stroke-width="1.5"/>
+      <line x1="96" y1="120" x2="96" y2="160" stroke="#5d6d7e" stroke-width="1.5"/>
+      <line x1="104" y1="120" x2="104" y2="160" stroke="#5d6d7e" stroke-width="1.5"/>
+      <line x1="112" y1="120" x2="112" y2="160" stroke="#5d6d7e" stroke-width="1.5"/>
+      <line x1="83" y1="135" x2="117" y2="135" stroke="#5d6d7e" stroke-width="1.5"/>
+      <line x1="83" y1="148" x2="117" y2="148" stroke="#5d6d7e" stroke-width="1.5"/>
+      
+      <!-- Оружие у стены -->
+      <line x1="45" y1="130" x2="55" y2="115" stroke="#8b4513" stroke-width="2"/>
+      <polygon points="53,113 58,118 55,112 50,110" fill="#95a5a6"/>
+      <line x1="155" y1="130" x2="145" y2="115" stroke="#8b4513" stroke-width="2"/>
+      <polygon points="147,113 142,118 145,112 150,110" fill="#95a5a6"/>
+    </svg>`,
+
+  // 🪙 ЗОЛОТАЯ ШАХТА — блестящая жила
+  goldmine: `
+    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="g-stone" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#95a5a6"/><stop offset="100%" stop-color="#34495e"/>
+        </linearGradient>
+        <radialGradient id="g-gold">
+          <stop offset="0%" stop-color="#fff9b0"/><stop offset="50%" stop-color="#ffd700"/><stop offset="100%" stop-color="#b8860b"/>
+        </radialGradient>
+      </defs>
+      
+      <ellipse cx="100" cy="175" rx="70" ry="17" fill="rgba(0,0,0,0.35)"/>
+      
+      <!-- Холм -->
+      <path d="M 20,170 Q 40,110 100,100 Q 160,110 180,170 Z" fill="url(#g-stone)"/>
+      <path d="M 30,170 Q 50,125 100,118 Q 150,125 170,170 Z" fill="#5d6d7e"/>
+      
+      <!-- Вход в шахту -->
+      <path d="M 80,170 Q 82,135 100,132 Q 118,135 120,170 Z" fill="#0a0a0a"/>
+      <path d="M 88,170 Q 90,150 100,148 Q 110,150 112,170 Z" fill="#000"/>
+      
+      <!-- Подпорка -->
+      <rect x="77" y="140" width="5" height="30" fill="#5d4037"/>
+      <rect x="118" y="140" width="5" height="30" fill="#5d4037"/>
+      <rect x="77" y="138" width="46" height="5" fill="#5d4037"/>
+      
+      <!-- Золотые жилы -->
+      <ellipse cx="60" cy="135" rx="6" ry="4" fill="url(#g-gold)"/>
+      <ellipse cx="140" cy="130" rx="7" ry="5" fill="url(#g-gold)"/>
+      <ellipse cx="55" cy="155" rx="4" ry="3" fill="url(#g-gold)"/>
+      <ellipse cx="145" cy="155" rx="5" ry="3" fill="url(#g-gold)"/>
+      <ellipse cx="100" cy="105" rx="5" ry="3" fill="url(#g-gold)"/>
+      
+      <!-- Монеты у входа -->
+      <circle cx="80" cy="172" r="4" fill="url(#g-gold)" stroke="#8b6914"/>
+      <circle cx="90" cy="175" r="3" fill="url(#g-gold)" stroke="#8b6914"/>
+      <circle cx="115" cy="173" r="4" fill="url(#g-gold)" stroke="#8b6914"/>
+      <circle cx="105" cy="176" r="3" fill="url(#g-gold)" stroke="#8b6914"/>
+      
+      <!-- Блик -->
+      <ellipse cx="60" cy="133" rx="2" ry="1" fill="#fff"/>
+      <ellipse cx="140" cy="128" rx="2" ry="1" fill="#fff"/>
+      
+      <!-- Тележка -->
+      <rect x="145" y="165" width="20" height="8" fill="#5d4037"/>
+      <circle cx="149" cy="175" r="3" fill="#2c3e50"/>
+      <circle cx="161" cy="175" r="3" fill="#2c3e50"/>
+      <circle cx="150" cy="162" r="3" fill="url(#g-gold)"/>
+      <circle cx="158" cy="160" r="2.5" fill="url(#g-gold)"/>
+    </svg>`,
+
+  // 📚 АКАДЕМИЯ — башня знаний
   academy: `
-    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-      <ellipse cx="50" cy="88" rx="35" ry="8" fill="rgba(0,0,0,0.3)"/>
-      <polygon points="15,80 50,95 85,80 50,65" fill="#e8c39e"/>
-      <polygon points="20,75 50,88 50,45 20,35" fill="#d4a76a"/>
-      <polygon points="80,75 50,88 50,45 80,35" fill="#c19a6b"/>
-      <polygon points="20,35 50,45 80,35 50,25" fill="#f5deb3"/>
-      <polygon points="20,35 50,45 50,15 20,5" fill="#3498db"/>
-      <polygon points="80,35 50,45 50,15 80,5" fill="#2980b9"/>
-      <polygon points="20,5 50,15 80,5 50,-5" fill="#1f618d"/>
+    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="a-wall-left" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#c9b48f"/><stop offset="100%" stop-color="#8b7a5c"/>
+        </linearGradient>
+        <linearGradient id="a-wall-right" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#a89677"/><stop offset="100%" stop-color="#6b5d45"/>
+        </linearGradient>
+        <linearGradient id="a-roof-left" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#3498db"/><stop offset="100%" stop-color="#1a5276"/>
+        </linearGradient>
+        <linearGradient id="a-roof-right" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#2980b9"/><stop offset="100%" stop-color="#0e3d5c"/>
+        </linearGradient>
+        <radialGradient id="a-orb">
+          <stop offset="0%" stop-color="#fff"/><stop offset="50%" stop-color="#f1c40f"/><stop offset="100%" stop-color="#b8860b"/>
+        </radialGradient>
+      </defs>
+      
+      <ellipse cx="100" cy="175" rx="70" ry="15" fill="rgba(0,0,0,0.35)"/>
+      
+      <polygon points="40,170 100,185 160,170 100,155" fill="#7a6b52"/>
+      <polygon points="40,170 40,162 100,177 100,185" fill="#5c4f3a"/>
+      <polygon points="160,170 160,162 100,177 100,185" fill="#4a4030"/>
+      
+      <!-- Основное здание -->
+      <polygon points="55,165 100,178 100,100 55,87" fill="url(#a-wall-left)"/>
+      <polygon points="145,165 100,178 100,100 145,87" fill="url(#a-wall-right)"/>
+      
       <!-- Колонны -->
-      <rect x="25" y="55" width="5" height="20" fill="#fff"/>
-      <rect x="70" y="55" width="5" height="20" fill="#fff"/>
-      <circle cx="50" cy="35" r="6" fill="#f1c40f" stroke="#f39c12"/>
-      <text x="50" y="39" font-size="10" text-anchor="middle" fill="#333" font-weight="bold">A</text>
+      <rect x="60" y="105" width="6" height="55" fill="#e8d5b7" transform="skewY(13)"/>
+      <rect x="85" y="118" width="6" height="50" fill="#e8d5b7" transform="skewY(13)"/>
+      <rect x="110" y="118" width="6" height="50" fill="#e8d5b7" transform="skewY(-13)"/>
+      <rect x="135" y="105" width="6" height="55" fill="#e8d5b7" transform="skewY(-13)"/>
+      
+      <!-- Крыша -->
+      <polygon points="50,90 100,103 100,55 50,42" fill="url(#a-roof-left)"/>
+      <polygon points="150,90 100,103 100,55 150,42" fill="url(#a-roof-right)"/>
+      <polygon points="50,42 100,55 150,42 100,29" fill="#0e3d5c"/>
+      
+      <!-- Башня -->
+      <polygon points="85,55 100,60 100,30 85,25" fill="url(#a-wall-left)"/>
+      <polygon points="115,55 100,60 100,30 115,25" fill="url(#a-wall-right)"/>
+      <polygon points="85,55 100,60 115,55 100,50" fill="#8b7a5c"/>
+      <polygon points="82,25 100,32 100,10 82,3" fill="url(#a-roof-left)"/>
+      <polygon points="118,25 100,32 100,10 118,3" fill="url(#a-roof-right)"/>
+      <polygon points="82,3 100,10 118,3 100,-4" fill="#0e3d5c"/>
+      
+      <!-- Магическая сфера -->
+      <circle cx="100" cy="20" r="6" fill="url(#a-orb)"/>
+      <circle cx="100" cy="20" r="3" fill="#fff" opacity="0.7"/>
+      
+      <!-- Окна-арки -->
+      <path d="M 70,140 L 70,125 Q 75,120 80,125 L 80,140 Z" fill="#1a252f" stroke="#2c3e50"/>
+      <path d="M 120,140 L 120,125 Q 125,120 130,125 L 130,140 Z" fill="#1a252f" stroke="#2c3e50"/>
+      
+      <!-- Дверь -->
+      <path d="M 90,165 L 90,130 Q 100,120 110,130 L 110,165 Z" fill="#5d4037"/>
+      <circle cx="100" cy="140" r="2" fill="#FFD700"/>
+      
+      <!-- Книги -->
+      <rect x="145" y="155" width="15" height="10" fill="#e74c3c"/>
+      <rect x="146" y="156" width="13" height="2" fill="#fff"/>
+      <rect x="145" y="145" width="15" height="10" fill="#3498db"/>
+      <rect x="146" y="146" width="13" height="2" fill="#fff"/>
     </svg>`
 };
 
-// ==================== КОНФИГУРАЦИЯ ====================
+// ==================== КОНФИГ ====================
 const BUILDINGS = {
-  cityhall: { name: 'Ратуша', sprite: 'cityhall', cost: { wood: 100, stone: 100, gold: 50 }, prod: {}, desc: 'Сердце деревни. Повышает лимит зданий.' },
-  house:    { name: 'Дом', sprite: 'house', cost: { wood: 30, stone: 10 }, prod: { gold: 1 }, desc: '+1 золото в сек.' },
-  farm:     { name: 'Ферма', sprite: 'farm', cost: { wood: 40, stone: 20 }, prod: { food: 3 }, desc: '+3 еды в сек.' },
-  lumber:   { name: 'Лесопилка', sprite: 'lumber', cost: { wood: 20, stone: 30 }, prod: { wood: 3 }, desc: '+3 дерева в сек.' },
-  quarry:   { name: 'Каменоломня', sprite: 'quarry', cost: { wood: 50, stone: 20 }, prod: { stone: 2 }, desc: '+2 камня в сек.' },
-  barracks: { name: 'Казарма', sprite: 'barracks', cost: { wood: 80, stone: 80, gold: 20 }, prod: {}, desc: 'Позволяет обучать войска.' },
-  goldmine: { name: 'Золотая шахта', sprite: 'goldmine', cost: { wood: 100, stone: 60 }, prod: { gold: 3 }, desc: '+3 золота в сек.' },
-  academy:  { name: 'Академия', sprite: 'academy', cost: { wood: 150, stone: 100, gold: 100 }, prod: {}, desc: 'Исследование технологий.' }
+  cityhall: { name: 'Ратуша', sprite: 'cityhall', cost: {}, prod: {}, desc: 'Сердце деревни' },
+  house:    { name: 'Дом', sprite: 'house', cost: { wood: 30, stone: 10 }, prod: { gold: 1 }, desc: '+1 золото/сек' },
+  farm:     { name: 'Ферма', sprite: 'farm', cost: { wood: 40, stone: 20 }, prod: { food: 3 }, desc: '+3 еды/сек' },
+  lumber:   { name: 'Лесопилка', sprite: 'lumber', cost: { wood: 20, stone: 30 }, prod: { wood: 3 }, desc: '+3 дерева/сек' },
+  quarry:   { name: 'Каменоломня', sprite: 'quarry', cost: { wood: 50, stone: 20 }, prod: { stone: 2 }, desc: '+2 камня/сек' },
+  barracks: { name: 'Казарма', sprite: 'barracks', cost: { wood: 80, stone: 80, gold: 20 }, prod: {}, desc: 'Обучает войска' },
+  goldmine: { name: 'Золотая шахта', sprite: 'goldmine', cost: { wood: 100, stone: 60 }, prod: { gold: 3 }, desc: '+3 золота/сек' },
+  academy:  { name: 'Академия', sprite: 'academy', cost: { wood: 150, stone: 100, gold: 100 }, prod: {}, desc: 'Технологии' }
 };
 
 // ==================== СОСТОЯНИЕ ====================
 let state = {
-  food: 200, wood: 200, stone: 100, gold: 50,
-  buildings: [], // { type, x, y, level }
-  soundOn: true
+  food: 500, wood: 500, stone: 200, gold: 100,
+  buildings: []
 };
 
-// Смещение камеры для панорамирования (можно перетаскивать)
-let camera = { x: 0, y: 0, isDragging: false, startX: 0, startY: 0 };
+let camera = { x: 0, y: 0, isDragging: false, startX: 0, startY: 0, moved: false };
+let placingMode = null; // тип здания в режиме постановки
+let ghostEl = null;
 
-// ==================== ЗАГРУЗКА / СОХРАНЕНИЕ ====================
+// ==================== СОХРАНЕНИЕ ====================
 function saveGame() {
-  localStorage.setItem('myHome_v3', JSON.stringify(state));
-  showToast('💾 Игра сохранена!');
+  localStorage.setItem('myHome_v4', JSON.stringify(state));
+  showToast('💾 Сохранено!');
 }
-
 function loadGame() {
-  const saved = localStorage.getItem('myHome_v3');
-  if (saved) {
-    try { state = JSON.parse(saved); } catch(e) {}
-  }
+  const s = localStorage.getItem('myHome_v4');
+  if (s) try { state = JSON.parse(s); } catch(e) {}
 }
 
-// ==================== ЭКОНОМИКА ====================
-function getProd() {
-  let prod = { food: 0, wood: 0, stone: 0, gold: 0 };
-  state.buildings.forEach(b => {
-    const base = BUILDINGS[b.type].prod;
-    for (let r in base) prod[r] += base[r] * b.level;
-  });
-  return prod;
-}
-
-function updateUI() {
-  document.getElementById('ui-food').textContent = Math.floor(state.food);
-  document.getElementById('ui-wood').textContent = Math.floor(state.wood);
-  document.getElementById('ui-stone').textContent = Math.floor(state.stone);
-  document.getElementById('ui-gold').textContent = Math.floor(state.gold);
-}
-
-// ==================== РЕНДЕР КАРТЫ ====================
+// ==================== РЕНДЕР ====================
 function renderWorld() {
   const world = document.getElementById('gameWorld');
-  
-  // Удаляем старые здания, оставляем сетку
   document.querySelectorAll('.entity').forEach(e => e.remove());
   
-  const centerX = window.innerWidth / 2;
-  const centerY = window.innerHeight / 2 + 100; // Смещаем центр вниз, чтобы дома были видны
+  const cx = window.innerWidth / 2 + camera.x;
+  const cy = window.innerHeight / 2 + camera.y + 100;
   
   state.buildings.forEach((b, i) => {
     const el = document.createElement('div');
     el.className = 'entity';
-    // Позиция на экране
-    el.style.left = (centerX + b.x + camera.x) + 'px';
-    el.style.top = (centerY + b.y + camera.y) + 'px';
-    
+    el.style.left = (cx + b.x) + 'px';
+    el.style.top = (cy + b.y) + 'px';
+    el.style.zIndex = Math.floor(b.y + 1000);
     el.innerHTML = `
       ${SPRITES[BUILDINGS[b.type].sprite]}
       <div class="entity-level">${b.level}</div>
     `;
-    
-    // Клик по зданию — улучшение
     el.onclick = (e) => {
       e.stopPropagation();
+      if (camera.moved) return;
       upgradeBuilding(i);
     };
-    
     world.appendChild(el);
   });
 }
 
 // ==================== МАГАЗИН ====================
-let shopMode = 'build'; // 'build' или 'upgrade'
-let currentUpgradeIndex = -1;
-
 function openShop() {
-  shopMode = 'build';
-  document.getElementById('modalTitle').textContent = 'Строительство';
-  renderShop();
+  cancelPlacement();
+  document.getElementById('modalTitle').textContent = '🏗️ Строительство';
+  const list = document.getElementById('shopList');
+  list.innerHTML = '';
+  
+  for (let type in BUILDINGS) {
+    if (type === 'cityhall') continue;
+    const b = BUILDINGS[type];
+    
+    let canAfford = true;
+    for (let r in b.cost) if (state[r] < b.cost[r]) canAfford = false;
+    
+    const el = document.createElement('div');
+    el.className = 'shop-card' + (canAfford ? '' : ' disabled');
+    el.innerHTML = `
+      <div class="shop-icon">${SPRITES[b.sprite]}</div>
+      <div class="shop-info">
+        <div class="shop-name">${b.name}</div>
+        <div class="shop-desc">${b.desc}</div>
+        <div class="shop-cost">
+          ${b.cost.wood ? `<span class="${state.wood < b.cost.wood ? 'bad' : ''}">🪵${b.cost.wood}</span>` : ''}
+          ${b.cost.stone ? `<span class="${state.stone < b.cost.stone ? 'bad' : ''}">🪨${b.cost.stone}</span>` : ''}
+          ${b.cost.gold ? `<span class="${state.gold < b.cost.gold ? 'bad' : ''}">🪙${b.cost.gold}</span>` : ''}
+        </div>
+      </div>
+    `;
+    if (canAfford) el.onclick = () => startPlacement(type);
+    list.appendChild(el);
+  }
+  
   document.getElementById('modal').classList.add('active');
 }
 
@@ -592,94 +950,79 @@ function closeModal(e) {
   document.getElementById('modal').classList.remove('active');
 }
 
-function renderShop() {
-  const list = document.getElementById('shopList');
-  list.innerHTML = '';
+// ==================== РЕЖИМ ПОСТАНОВКИ ====================
+function startPlacement(type) {
+  closeModal();
+  placingMode = type;
   
-  if (shopMode === 'build') {
-    for (let type in BUILDINGS) {
-      const b = BUILDINGS[type];
-      
-      // Проверка: Ратуша только одна
-      if (type === 'cityhall' && state.buildings.some(bld => bld.type === 'cityhall')) continue;
-      
-      // Проверка ресурсов
-      let canAfford = true;
-      for (let r in b.cost) if (state[r] < b.cost[r]) canAfford = false;
-      
-      const el = document.createElement('div');
-      el.className = 'shop-card' + (canAfford ? '' : ' disabled');
-      el.innerHTML = `
-        <div class="shop-icon">${SPRITES[b.sprite]}</div>
-        <div class="shop-info">
-          <div class="shop-name">${b.name}</div>
-          <div class="shop-desc">${b.desc}</div>
-          <div class="shop-cost">
-            ${b.cost.wood ? `<span>🪵${b.cost.wood}</span>` : ''}
-            ${b.cost.stone ? `<span>🪨${b.cost.stone}</span>` : ''}
-            ${b.cost.gold ? `<span>🪙${b.cost.gold}</span>` : ''}
-          </div>
-        </div>
-      `;
-      
-      if (canAfford) {
-        el.onclick = () => build(type);
-      }
-      list.appendChild(el);
-    }
+  // Создаём призрак
+  if (!ghostEl) {
+    ghostEl = document.createElement('div');
+    ghostEl.className = 'ghost';
+    document.getElementById('gameWorld').appendChild(ghostEl);
   }
+  ghostEl.innerHTML = SPRITES[BUILDINGS[type].sprite] + '<div class="ghost-shadow"></div>';
+  ghostEl.style.display = 'block';
+  
+  document.getElementById('gameWorld').classList.add('placing');
+  document.getElementById('placeHint').classList.add('active');
+  
+  showToast(`📍 Выбери место для ${BUILDINGS[type].name}`);
 }
 
-// ==================== ПОСТРОЙКА И УЛУЧШЕНИЕ ====================
-function build(type) {
-  const b = BUILDINGS[type];
+function cancelPlacement() {
+  placingMode = null;
+  if (ghostEl) ghostEl.style.display = 'none';
+  document.getElementById('gameWorld').classList.remove('placing');
+  document.getElementById('placeHint').classList.remove('active');
+}
+
+// Проверка пересечения
+function isOverlapping(x, y, excludeIdx = -1) {
+  return state.buildings.some((b, i) => {
+    if (i === excludeIdx) return false;
+    const dx = Math.abs(b.x - x);
+    const dy = Math.abs(b.y - y);
+    return dx < 70 && dy < 35;
+  });
+}
+
+function screenToWorld(sx, sy) {
+  const cx = window.innerWidth / 2 + camera.x;
+  const cy = window.innerHeight / 2 + camera.y + 100;
+  return { x: sx - cx, y: sy - cy };
+}
+
+// ==================== ПОСТРОЙКА ====================
+function confirmPlacement(screenX, screenY) {
+  if (!placingMode) return;
+  const w = screenToWorld(screenX, screenY);
   
-  // Проверка ресурсов
-  for (let r in b.cost) {
-    if (state[r] < b.cost[r]) { showToast('❌ Не хватает ресурсов!'); return; }
+  if (isOverlapping(w.x, w.y)) {
+    showToast('❌ Здесь уже есть здание!');
+    return;
   }
   
-  // Списываем
+  const b = BUILDINGS[placingMode];
+  for (let r in b.cost) {
+    if (state[r] < b.cost[r]) { showToast('❌ Не хватает ресурсов!'); cancelPlacement(); return; }
+  }
   for (let r in b.cost) state[r] -= b.cost[r];
   
-  // Рандомная позиция на карте (в радиусе от центра)
-  // Если это ратуша — ставим строго в центр (0,0)
-  let px = 0, py = 0;
-  if (type !== 'cityhall') {
-    // Ищем свободное место
-    let attempts = 0;
-    do {
-      const angle = Math.random() * Math.PI * 2;
-      const dist = 80 + Math.random() * 100; // Отступ от ратуши
-      px = Math.cos(angle) * dist;
-      py = Math.sin(angle) * dist * 0.5; // Изометрия (сплющиваем Y)
-      attempts++;
-    } while (checkOverlap(px, py) && attempts < 50);
-  }
-  
-  state.buildings.push({ type, x: px, y: py, level: 1 });
+  state.buildings.push({ type: placingMode, x: w.x, y: w.y, level: 1 });
   
   showToast(`✅ ${b.name} построен!`);
-  closeModal();
+  cancelPlacement();
   renderWorld();
   updateUI();
   saveGame();
 }
 
-function checkOverlap(x, y) {
-  // Простая проверка, чтобы дома не накладывались
-  return state.buildings.some(b => {
-    const dx = Math.abs(b.x - x);
-    const dy = Math.abs(b.y - y);
-    return dx < 40 && dy < 20;
-  });
-}
-
+// ==================== УЛУЧШЕНИЕ ====================
 function upgradeBuilding(index) {
   const b = state.buildings[index];
   const bDef = BUILDINGS[b.type];
   
-  // Стоимость улучшения = базовая * 1.5^уровень
   const mult = Math.pow(1.6, b.level);
   const cost = {
     wood: Math.floor((bDef.cost.wood || 0) * mult),
@@ -687,28 +1030,30 @@ function upgradeBuilding(index) {
     gold: Math.floor((bDef.cost.gold || 0) * mult)
   };
   
-  // Проверка
   let canAfford = true;
-  for (let r in cost) {
-    if (cost[r] > 0 && state[r] < cost[r]) canAfford = false;
-  }
+  for (let r in cost) if (cost[r] > 0 && state[r] < cost[r]) canAfford = false;
   
   if (!canAfford) {
-    showToast(`❌ Нужно на улучшение: 🪵${cost.wood} 🪨${cost.stone} 🪙${cost.gold}`);
+    showToast(`❌ Нужно: ${cost.wood ? '🪵'+cost.wood+' ' : ''}${cost.stone ? '🪨'+cost.stone+' ' : ''}${cost.gold ? '🪙'+cost.gold : ''}`);
     return;
   }
   
-  // Списываем и улучшаем
   for (let r in cost) if (cost[r] > 0) state[r] -= cost[r];
   b.level++;
-  
-  showToast(`⬆️ ${bDef.name} улучшен до ур. ${b.level}`);
+  showToast(`⬆️ ${bDef.name} → ур. ${b.level}`);
   renderWorld();
   updateUI();
   saveGame();
 }
 
-// ==================== ТОСТЫ ====================
+// ==================== UI ====================
+function updateUI() {
+  document.getElementById('ui-food').textContent = Math.floor(state.food);
+  document.getElementById('ui-wood').textContent = Math.floor(state.wood);
+  document.getElementById('ui-stone').textContent = Math.floor(state.stone);
+  document.getElementById('ui-gold').textContent = Math.floor(state.gold);
+}
+
 let toastTimeout;
 function showToast(text) {
   const t = document.getElementById('toast');
@@ -718,86 +1063,149 @@ function showToast(text) {
   toastTimeout = setTimeout(() => t.classList.remove('show'), 2500);
 }
 
-// ==================== СБРОС ====================
+function centerCamera() {
+  camera.x = 0; camera.y = 0;
+  renderWorld();
+}
+
 function resetGame() {
   if (confirm('Сбросить игру?')) {
-    localStorage.removeItem('myHome_v3');
-    state = { food: 200, wood: 200, stone: 100, gold: 50, buildings: [], soundOn: true };
-    renderWorld();
-    updateUI();
+    localStorage.removeItem('myHome_v4');
+    state = { food: 500, wood: 500, stone: 200, gold: 100, buildings: [{ type: 'cityhall', x: 0, y: 0, level: 1 }] };
+    camera = { x: 0, y: 0, isDragging: false, startX: 0, startY: 0, moved: false };
+    renderWorld(); updateUI();
     showToast('🔄 Игра сброшена');
   }
 }
 
-// ==================== ИГРОВОЙ ЦИКЛ ====================
+// ==================== ЦИКЛ ====================
 function gameTick() {
-  const prod = getProd();
-  state.food += prod.food;
+  let prod = { food: 0, wood: 0, stone: 0, gold: 0 };
+  state.buildings.forEach(b => {
+    const p = BUILDINGS[b.type].prod;
+    for (let r in p) prod[r] += p[r] * b.level;
+  });
+  
+  state.food += prod.food - state.buildings.length * 0.5;
   state.wood += prod.wood;
   state.stone += prod.stone;
   state.gold += prod.gold;
   
-  // Расход еды (если есть дома)
-  state.food -= state.buildings.length * 0.5;
   if (state.food < 0) state.food = 0;
-  
   updateUI();
 }
 
 // ==================== ИНИЦИАЛИЗАЦИЯ ====================
 function init() {
   loadGame();
-  
-  // Генерируем изометрическую сетку земли
-  const grid = document.getElementById('grid');
-  for (let i = 0; i < 400; i++) {
-    const tile = document.createElement('div');
-    tile.className = 'tile';
-    // Случайные пятна травы
-    tile.style.background = Math.random() > 0.8 ? '#7cb342' : '#8bc34a';
-    grid.appendChild(tile);
-  }
-  
-  // Если зданий нет — автоматически ставим Ратушу (как в RoK)
   if (state.buildings.length === 0) {
     state.buildings.push({ type: 'cityhall', x: 0, y: 0, level: 1 });
   }
   
+  // Земля с сеткой
+  const ground = document.getElementById('ground');
+  ground.innerHTML = '';
+  // Здесь можно добавить декоративные элементы
+  for (let i = 0; i < 15; i++) {
+    const tree = document.createElement('div');
+    tree.style.position = 'absolute';
+    tree.style.left = Math.random() * 100 + '%';
+    tree.style.top = Math.random() * 100 + '%';
+    tree.style.fontSize = (20 + Math.random() * 15) + 'px';
+    tree.style.opacity = '0.5';
+    tree.style.pointerEvents = 'none';
+    tree.textContent = Math.random() > 0.5 ? '🌲' : '🌳';
+    ground.appendChild(tree);
+  }
+  
   renderWorld();
   updateUI();
-  
-  // Запускаем цикл
   setInterval(gameTick, 1000);
   
-  // Обработка перетаскивания карты
   const world = document.getElementById('gameWorld');
+  
+  // Отслеживаем движение мыши для призрака и постановки
+  world.addEventListener('mousemove', (e) => {
+    if (!placingMode) return;
+    ghostEl.style.left = e.clientX + 'px';
+    ghostEl.style.top = e.clientY + 'px';
+    
+    const w = screenToWorld(e.clientX, e.clientY);
+    if (isOverlapping(w.x, w.y)) {
+      ghostEl.classList.add('invalid');
+    } else {
+      ghostEl.classList.remove('invalid');
+    }
+  });
+  
+  world.addEventListener('touchmove', (e) => {
+    if (!placingMode) return;
+    const t = e.touches[0];
+    ghostEl.style.left = t.clientX + 'px';
+    ghostEl.style.top = t.clientY + 'px';
+    const w = screenToWorld(t.clientX, t.clientY);
+    if (isOverlapping(w.x, w.y)) ghostEl.classList.add('invalid');
+    else ghostEl.classList.remove('invalid');
+  }, {passive: true});
+  
+  // Клик для постановки
+  world.addEventListener('click', (e) => {
+    if (camera.moved) { camera.moved = false; return; }
+    if (placingMode) {
+      confirmPlacement(e.clientX, e.clientY);
+    }
+  });
+  
+  world.addEventListener('touchend', (e) => {
+    if (!placingMode) return;
+    const t = e.changedTouches[0];
+    confirmPlacement(t.clientX, t.clientY);
+  });
+  
+  // Панорамирование (drag)
   world.addEventListener('mousedown', (e) => {
-    if (e.target.closest('.entity') || e.target.closest('.btn-circular')) return;
+    if (placingMode) return;
+    if (e.target.closest('.btn-circular')) return;
     camera.isDragging = true;
+    camera.moved = false;
     camera.startX = e.clientX - camera.x;
     camera.startY = e.clientY - camera.y;
   });
+  
   window.addEventListener('mousemove', (e) => {
     if (!camera.isDragging) return;
-    camera.x = e.clientX - camera.startX;
-    camera.y = e.clientY - camera.startY;
+    const newX = e.clientX - camera.startX;
+    const newY = e.clientY - camera.startY;
+    if (Math.abs(newX - camera.x) > 3 || Math.abs(newY - camera.y) > 3) camera.moved = true;
+    camera.x = newX; camera.y = newY;
     renderWorld();
   });
   window.addEventListener('mouseup', () => camera.isDragging = false);
   
-  // Мобильная адаптация для перетаскивания
+  // Тач для панорамирования
+  let touchStart = null;
   world.addEventListener('touchstart', (e) => {
-    if (e.target.closest('.entity')) return;
+    if (placingMode) return;
+    const t = e.touches[0];
     camera.isDragging = true;
-    camera.startX = e.touches[0].clientX - camera.x;
-    camera.startY = e.touches[0].clientY - camera.y;
+    camera.moved = false;
+    camera.startX = t.clientX - camera.x;
+    camera.startY = t.clientY - camera.y;
+    touchStart = { x: t.clientX, y: t.clientY };
   }, {passive: true});
+  
   window.addEventListener('touchmove', (e) => {
-    if (!camera.isDragging) return;
-    camera.x = e.touches[0].clientX - camera.startX;
-    camera.y = e.touches[0].clientY - camera.startY;
+    if (!camera.isDragging || placingMode) return;
+    const t = e.touches[0];
+    const newX = t.clientX - camera.startX;
+    const newY = t.clientY - camera.startY;
+    if (touchStart && (Math.abs(t.clientX - touchStart.x) > 5 || Math.abs(t.clientY - touchStart.y) > 5)) {
+      camera.moved = true;
+    }
+    camera.x = newX; camera.y = newY;
     renderWorld();
   }, {passive: true});
+  
   window.addEventListener('touchend', () => camera.isDragging = false);
 }
 
